@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   test-arithmetic:
@@ -55,14 +55,16 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build Docker image
-        run: docker build -t robe/development:math-app .
+        run: docker build -t math-app .
 
       - name: Push Docker image to Docker Hub
-        run: docker push robe/development:math-app
+        run: docker push math-app
 
       - name: Deploy to AWS EC2
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} ec2-user@${{ secrets.EC2_INSTANCE }} 'docker pull robe/development:math-app && docker stop math-app || true && docker rm math-app || true && docker run -d -p 3000:3000 --name math-app math-app'
+          echo "${{ secrets.EC2_SSH_KEY }}" > /tmp/ssh_key
+          chmod 600 /tmp/ssh_key
+          ssh -o StrictHostKeyChecking=no -i /tmp/ssh_key ec2-user@${{ secrets.EC2_INSTANCE }} 'docker pull math-app && docker stop math-app || true && docker rm math-app || true && docker run -d -p 3000:3000 --name math-app math-app'
