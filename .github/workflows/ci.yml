@@ -65,4 +65,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-            ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} ec2-user@${{ secrets.EC2_INSTANCE }} 'docker pull robe/development:math-app && docker stop math-app || true && docker rm math-app || true && docker run -d -p 3000:3000 --name math-app robe/development:math-app'
+            echo "${{ secrets.EC2_SSH_KEY }}" > ssh_key.pem
+            chmod 400 ssh_key.pem
+            ssh -o StrictHostKeyChecking=no -i ssh_key.pem ec2-user@${{ secrets.EC2_INSTANCE }} 'docker pull robe/development:math-app && docker stop math-app || true && docker rm math-app || true && docker run -d -p 3000:3000 --name math-app robe/development:math-app'
+            rm ssh_key.pem
